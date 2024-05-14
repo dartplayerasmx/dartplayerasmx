@@ -1,0 +1,113 @@
+5. KeyPad
+
+#include <p18f4550.h>
+#define LCD_EN LATAbits.LA1
+#define LCD_RS LATAbits.LA0
+#define LCDPORT LATB
+
+const unsigned char KeyLookupTbl[]={'1','4','7','.',
+   				    '2','5','8','0',
+				    '3','6','9','#',
+				    'A','B','C','D'};
+
+void lcd_delay(unsigned int time)
+{
+ unsigned int i , j ;
+
+    for(i = 0; i < time; i++)
+    {
+            for(j=0;j<50;j++);
+    }
+}
+
+
+void SendInstruction(unsigned char command)
+{
+     LCD_RS = 0;		
+     LCDPORT = command;
+     LCD_EN = 1;		
+     lcd_delay(10);
+     LCD_EN = 0;		
+     lcd_delay(10);
+}
+
+void SendData(unsigned char lcddata)
+{
+     LCD_RS = 1;		
+     LCDPORT = lcddata;
+     LCD_EN = 1;		
+     lcd_delay(10);
+     LCD_EN = 0;		
+     lcd_delay(10);
+}
+
+void InitLCD(void)
+{
+    ADCON1 = 0x0F;
+    TRISB = 0x00; 
+    TRISAbits.RA0 = 0;
+    TRISAbits.RA1 = 0; 
+
+    SendInstruction(0x38);     
+    SendInstruction(0x06);	
+    SendInstruction(0x0C);	
+    SendInstruction(0x01);      
+    SendInstruction(0x80);      
+}
+
+
+unsigned char ReadKey(void)
+{
+ unsigned char row,val, i, j, key=0;
+
+ while(1)                                   
+ {
+   LATD = 0xFF;
+   for(i=0x01;i<0x10;i=i<<1)
+   {
+       LATD = ~i;                           
+       lcd_delay(2);
+       row = PORTD>>4;                      
+       for(j=0x01;j<0x10;j=j<<1)
+       {
+           if((row & j) == 0)                 
+           {
+               val = KeyLookupTbl[key];     
+               return val;
+           }
+           else
+               key++;                       
+       }
+   }
+
+ }
+}
+
+void main()
+{
+    unsigned char Key, str[16];
+    unsigned char *string1 = "Key Pressed = ";
+    
+    TRISD = 0xF0;                           //rows as inputs and columns as output
+    LATD = 0xFF;
+
+    InitLCD();
+    SendInstruction(0x80);                  //set 1st line
+    while(*string1)
+        SendData(*string1++);
+
+
+     while(1)                               //Forever loop
+    {
+        Key = ReadKey();                    //Check the key pressed
+        SendInstruction(0xC0);              //set 2nd line
+        SendData(Key);
+        lcd_delay(100);
+     }
+}
+
+
+
+
+
+
