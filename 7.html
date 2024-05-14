@@ -1,15 +1,6 @@
 7. Square Wave
 
 
-/*CALCULATIONS
- * required time = 100ms
- * TMR value = 0xFFFF - (required time) / (4 * Tosc * Prescaler)
- *           = 0xFFFF - (0.1 * 48000000) / (4 * 256)
- *           = 0xFFFF - 0x124F
- * TMR       = 0xEDB0
- * TMRH = 0xED
- * TMRL = 0xB0
- */
 
 #include<p18f4550.h>
 
